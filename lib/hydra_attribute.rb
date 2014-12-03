@@ -1,7 +1,7 @@
 require 'active_record'
 
 module HydraAttribute
-  SUPPORTED_BACKEND_TYPES = %w[string text integer float decimal boolean datetime].freeze
+  SUPPORTED_BACKEND_TYPES = %w[string text integer float decimal boolean datetime polymorphic_association].freeze
 
   if ActiveRecord.version >= Gem::Version.new('4.2.0')
     BACKEND_TYPE_MAP = {

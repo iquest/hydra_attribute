@@ -67,7 +67,7 @@ module HydraAttribute
         create_table :hydra_attributes do |t|
           t.string  :entity_type,  limit: 32, null: false
           t.string  :name,         limit: 32, null: false
-          t.string  :backend_type, limit: 16, null: false
+          t.string  :backend_type, limit: 24, null: false
           t.string  :default_value
           t.boolean :white_list,              null: false, default: false
           t.timestamps                        null: false
@@ -98,6 +98,9 @@ module HydraAttribute
             t.integer :entity_id,          null: false
             t.integer :hydra_attribute_id, null: false
             case type
+            when 'polymorphic_association'
+              t.send :integer, :value_id, null: true
+              t.send :string, :value_type, null: true
             when 'decimal'
               t.send type, :value, precision: 10, scale: 4, null: true
             else
