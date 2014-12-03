@@ -21,7 +21,7 @@ module HydraAttribute
     include ActiveModel::AttributeMethods
     include ActiveModel::Dirty
 
-    attr_reader :entity, :value
+    attr_reader :entity, :value, :value_id, :value_type
 
     define_attribute_method :value
 
@@ -111,7 +111,12 @@ module HydraAttribute
     def value=(new_value)
       value_will_change! unless value == new_value
       @attributes[:value] = new_value
-      @value = column.type_cast(new_value)
+      if column.sql_type == "polymorphic_association"
+        @value_id = new_value.id
+        @value_type = new_value.class.to_s
+      else
+        @value = column.type_cast(new_value)
+      end
     end
 
     # Returns not type cased value
@@ -173,15 +178,28 @@ module HydraAttribute
       # Creates arel insert manager
       #
       # @return [Arel::InsertManager]
+  
+      
       def arel_insert
+
         table  = self.class.arel_tables[entity.class.table_name][hydra_attribute.backend_type]
         fields = {}
+        
+      
+        
         fields[table[:entity_id]]          = entity.id
         fields[table[:hydra_attribute_id]] = hydra_attribute.id
-        fields[table[:value]]              = value
+        if column.sql_type == "polymorphic_association"
+          fields[table[:value_id]]    = value_id
+          fields[table[:value_type]]  = value_type
+        else
+          fields[table[:value]] = value
+        end
         fields[table[:created_at]]         = Time.now
         fields[table[:updated_at]]         = Time.now
         table.compile_insert(fields)
+        
+        
       end
 
       # Creates arel update manager
