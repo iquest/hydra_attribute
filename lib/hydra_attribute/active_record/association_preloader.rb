@@ -22,7 +22,16 @@ module HydraAttribute
             # set values from database
             database_entity_and_hydra_attribute_ids = {}
             hydra_attribute_ids.each_slice(in_clause_length || hydra_attribute_ids.length) do |attribute_ids|
-              ::ActiveRecord::Base.connection.select_all("SELECT id, entity_id, hydra_attribute_id, value FROM hydra_#{backend_type}_#{klass.table_name} WHERE entity_id IN (#{entity_ids.join(', ')}) AND hydra_attribute_id IN (#{attribute_ids.join(', ')})").each do |attributes|
+              
+              if backend_type == "polymorphic_association"
+                sql_string = "SELECT id, entity_id, hydra_attribute_id, value_id, value_type FROM hydra_#{backend_type}_#{klass.table_name} WHERE entity_id IN (#{entity_ids.join(', ')}) AND hydra_attribute_id IN (#{attribute_ids.join(', ')})"
+              else
+                sql_string = "SELECT id, entity_id, hydra_attribute_id, value FROM hydra_#{backend_type}_#{klass.table_name} WHERE entity_id IN (#{entity_ids.join(', ')}) AND hydra_attribute_id IN (#{attribute_ids.join(', ')})"
+              end
+              
+              
+              
+              ::ActiveRecord::Base.connection.select_all(sql_string).each do |attributes|
                 # PostgreSQL driver doesn't convert values, it returns them as strings
                 id                 = attributes['id'].to_i
                 entity_id          = attributes['entity_id'].to_i
