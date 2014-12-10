@@ -120,11 +120,20 @@ module HydraAttribute
     def value=(new_value)
       value_will_change! unless value == new_value
       @attributes[:value] = new_value
-      type_cast = column.respond_to?(:type_cast) ? :type_cast : :type_cast_from_database
-      @value = column.send(type_cast, new_value)
       if column.sql_type == "polymorphic_association"
-        @value_id = new_value.id
-        @value_type = new_value.class.to_s
+
+        if new_value.is_a?(::ActiveRecord::Base)
+          @value_id = new_value.id
+          @value_type = new_value.class.to_s
+        elsif new_value.is_a?(::String) && (new_value.to_i.to_s != new_value)
+          @value_type = new_value
+        elsif new_value.is_a?(::String) && (new_value.to_i.to_s == new_value)
+          @value_id = new_value.to_i
+        elsif new_value.is_a?(::Fixnum)
+          @value_id = new_value
+        else
+          Rails.logger.error("Value for #{self.hydra_attribute.name} must be an ActiveRecord::Base object but is #{new_value}")
+        end
       else
         type_cast = column.respond_to?(:type_cast) ? :type_cast : :type_cast_from_database
         @value = column.send(type_cast, new_value)
@@ -212,7 +221,12 @@ module HydraAttribute
       def arel_update
         table = self.class.arel_tables[entity.class.table_name][hydra_attribute.backend_type]
         arel  = table.from(table)
-        arel.where(table[:id].eq(id)).compile_update({table[:value] => value, table[:updated_at] => Time.now}, id)
+        if column.sql_type == "polymorphic_association"
+          arel.where(table[:id].eq(id)).compile_update({table[:value_id] => value_id, table[:value_type] => value_type, table[:updated_at] => Time.now}, id)
+        else
+          arel.where(table[:id].eq(id)).compile_update({table[:value] => value, table[:updated_at] => Time.now}, id)
+        end
+
       end
 
       # Performs sql insert query
