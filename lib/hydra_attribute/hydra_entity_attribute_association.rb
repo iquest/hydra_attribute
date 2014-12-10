@@ -24,6 +24,10 @@ module HydraAttribute
       def generate_methods
         ::HydraAttribute::HydraAttribute.all.each do |hydra_attribute|
           add_to_cache(hydra_attribute.entity_type, hydra_attribute.name, hydra_attribute.id)
+          if hydra_attribute.backend_type == "polymorphic_association"
+            add_to_cache(hydra_attribute.entity_type, "#{hydra_attribute.name}_id", hydra_attribute.id)
+            add_to_cache(hydra_attribute.entity_type, "#{hydra_attribute.name}_type", hydra_attribute.id)
+          end
         end
         identity_map[:___methods_generated___] = true
       end
@@ -61,6 +65,7 @@ module HydraAttribute
             identity_map[entity_type][:names][name] << current
             identity_map[entity_type][:names_as_hash][current] = proxy
             identity_map[entity_type][:ids_as_hash][current]   = id
+
           end
         end
 
