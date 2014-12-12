@@ -37,7 +37,11 @@ module HydraAttribute
                 entity_id          = attributes['entity_id'].to_i
                 hydra_attribute_id = attributes['hydra_attribute_id'].to_i
 
-                assign_hydra_value_options(id: id, entity_id: entity_id, hydra_attribute_id: hydra_attribute_id, value: attributes['value'])
+                if backend_type == "polymorphic_association"
+                  assign_hydra_value_options(id: id, entity_id: entity_id, hydra_attribute_id: hydra_attribute_id, value_id: attributes['value_id'], value_type: attributes['value_type'])
+                else
+                  assign_hydra_value_options(id: id, entity_id: entity_id, hydra_attribute_id: hydra_attribute_id, value: attributes['value'])
+                end
                 (database_entity_and_hydra_attribute_ids[entity_id] ||= []) << hydra_attribute_id
               end
             end
