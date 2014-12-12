@@ -21,9 +21,11 @@ module HydraAttribute
     include ActiveModel::AttributeMethods
     include ActiveModel::Dirty
 
-    attr_reader :entity, :value, :value_id, :value_type
+    attr_reader :entity, :value_id, :value_type
 
     define_attribute_method :value
+    define_attribute_method :value_id
+    define_attribute_method :value_type
 
     # Initialize hydra value object
     #
@@ -39,6 +41,9 @@ module HydraAttribute
       type_cast = column.respond_to?(:type_cast) ? :type_cast : :type_cast_from_database
       if attributes.has_key?(:value)
         @value = column.send(type_cast, attributes[:value])
+      elsif attributes.has_key?(:value_id) && attributes.has_key?(:value_type)
+        @value_id = column.send(type_cast, attributes[:value_id])
+        @value_type = column.send(type_cast, attributes[:value_type])
       else
         @value = column.send(type_cast, column.default)
         attributes[:value] = column.default
@@ -113,6 +118,21 @@ module HydraAttribute
       @attributes[:id]
     end
 
+    def value
+      if column.sql_type == "polymorphic_association"
+        polymorphic_value
+      else
+        @value
+      end
+    end
+
+    # Returns object for polymorphic association
+    #
+    # @return ActiveRecord::Base object
+    def polymorphic_value
+      @value_type.constantize.find(@value_id) if @value_type.present? && @value_id.present?
+    end
+
     # Sets new type casted attribute value
     #
     # @param [Object] new_value
@@ -139,6 +159,27 @@ module HydraAttribute
         @value = column.send(type_cast, new_value)
       end
     end
+
+    # Sets new type casted attribute value_id
+    #
+    # @param [Object] new_value
+    # @return [NilClass]
+    def value_id=(new_value)
+      value_will_change! unless value_id == new_value
+      @attributes[:value_id] = new_value
+      @value_id = column.type_cast(new_value)
+    end
+
+    # Sets new type casted attribute value_type
+    #
+    # @param [Object] new_value
+    # @return [NilClass]
+    def value_type=(new_value)
+      value_will_change! unless value_type == new_value
+      @attributes[:value_type] = new_value
+      @value_type = column.type_cast(new_value)
+    end
+
 
     # Returns not type cased value
     #
