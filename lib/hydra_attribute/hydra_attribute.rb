@@ -17,5 +17,9 @@ module HydraAttribute
     define_cached_singleton_method :backend_types_by_entity_type, cache_key: :entity_type, cache_value: :backend_type, cache_key_cast: :to_s
 
     has_many :hydra_sets, through: :hydra_attribute_set, copy_attribute: :entity_type
+    
+    def valid_values_to_array
+      valid_values.split(",")
+    end
   end
 end
