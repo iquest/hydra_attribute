@@ -19,7 +19,7 @@ module HydraAttribute
     has_many :hydra_sets, through: :hydra_attribute_set, copy_attribute: :entity_type
     
     def valid_values_to_array
-      valid_values.split(",")
+      valid_values.split(",").map(&:strip)
     end
   end
 end

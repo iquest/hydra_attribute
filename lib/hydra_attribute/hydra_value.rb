@@ -156,9 +156,16 @@ module HydraAttribute
     # @return [NilClass]
     def value_id=(new_value)
       value_will_change! unless value_id == new_value
-      @attributes[:value_id] = new_value  
-      @value_id = column.type_cast(new_value)
+      
+      if new_value.to_i == 0
+        @value_id = @value_type = nil
+        @attributes[:value_id] = new_value   = nil
+      else  
+        @attributes[:value_id] = new_value  
+        @value_id = column.type_cast(new_value)
+      end
     end
+    
     
     # Sets new type casted attribute value_type
     #
