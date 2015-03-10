@@ -35,7 +35,7 @@ module HydraAttribute
     end
 
     def valid_values_to_array
-      valid_values.split(",")
+      valid_values.split(",").map(&:strip)
     end
   end
 end
