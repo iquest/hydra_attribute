@@ -101,6 +101,8 @@ module HydraAttribute
             when 'polymorphic_association'
               t.send :integer, :value_id, null: true
               t.send :string, :value_type, null: true
+            when 'enum'
+              t.send :text, :value, null: true
             when 'decimal'
               t.send type, :value, precision: 10, scale: 4, null: true
             else

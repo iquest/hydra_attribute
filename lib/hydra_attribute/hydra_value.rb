@@ -38,7 +38,13 @@ module HydraAttribute
       raise HydraAttributeIdIsMissedError unless attributes.has_key?(:hydra_attribute_id)
       @entity     = entity
       @attributes = attributes
-      if attributes.has_key?(:value)
+      if column.sql_type == "enum"
+        if column.type_cast(attributes[:value]).nil?
+          @value = nil
+        else
+          @value = attributes[:value].to_json
+        end
+      elsif attributes.has_key?(:value)
         @value = column.type_cast(attributes[:value])
       elsif attributes.has_key?(:value_id) && attributes.has_key?(:value_type)
         @value_id = column.type_cast(attributes[:value_id])
@@ -112,6 +118,12 @@ module HydraAttribute
     def value
       if column.sql_type == "polymorphic_association"
         polymorphic_value
+      elsif column.sql_type == "enum"
+        if @value.is_a?(Array) || @value.is_a?(Hash)
+          @value
+        else
+          YAML.load value_before_type_cast if value_before_type_cast
+        end
       else
         @value
       end
@@ -123,6 +135,8 @@ module HydraAttribute
     def polymorphic_value
       @value_type.constantize.find(@value_id) if @value_type.present? && @value_id.present?
     end
+    
+
 
     # Sets new type casted attribute value
     #

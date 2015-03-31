@@ -1,7 +1,7 @@
 require 'active_record'
 
 module HydraAttribute
-  SUPPORTED_BACKEND_TYPES = %w[string text integer float decimal boolean datetime polymorphic_association].freeze
+  SUPPORTED_BACKEND_TYPES = %w[string text integer float decimal boolean datetime polymorphic_association enum].freeze
 
   class << self
     def config
