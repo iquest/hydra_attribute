@@ -397,8 +397,12 @@ module HydraAttribute
         # @param [Object] value
         # @return [Object] type casted value
         def type_cast_value(name, value)
-          column = self.class.symbolized_columns_hash[name]
-          column.respond_to?(:type_cast) ? column.type_cast(value) : column.type_cast_from_database(value)
+          if value.is_a?(Array) || value.is_a?(Hash)
+            value.to_json
+          else
+            column = self.class.symbolized_columns_hash[name]
+            column.respond_to?(:type_cast) ? column.type_cast(value) : column.type_cast_from_database(value)
+          end
         end
 
         # Redefine method for auto generation attribute methods

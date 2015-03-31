@@ -39,8 +39,14 @@ module HydraAttribute
       @entity     = entity
       @attributes = attributes
       type_cast = column.respond_to?(:type_cast) ? :type_cast : :type_cast_from_database
-      if attributes.has_key?(:value)
-        @value = column.send(type_cast, attributes[:value])
+      if column.sql_type == "enum"
+        if column.send(type_cast, attributes[:value]).nil?
+          @value = nil
+        else
+          @value = attributes[:value].to_json
+        end
+      elsif attributes.has_key?(:value)
+        @value = column.type_cast(attributes[:value])
       elsif attributes.has_key?(:value_id) && attributes.has_key?(:value_type)
         @value_id = column.send(type_cast, attributes[:value_id])
         @value_type = column.send(type_cast, attributes[:value_type])
@@ -121,11 +127,17 @@ module HydraAttribute
     def value
       if column.sql_type == "polymorphic_association"
         polymorphic_value
+      elsif column.sql_type == "enum"
+        if @value.is_a?(Array) || @value.is_a?(Hash)
+          @value
+        else
+          YAML.load value_before_type_cast if value_before_type_cast
+        end
       else
         @value
       end
     end
-
+      
     # Returns object for polymorphic association
     #
     # @return ActiveRecord::Base object
@@ -141,7 +153,7 @@ module HydraAttribute
       value_will_change! unless value == new_value
       @attributes[:value] = new_value
       if column.sql_type == "polymorphic_association"
-
+        
         if new_value.is_a?(::ActiveRecord::Base)
           @value_id = new_value.id
           @value_type = new_value.class.to_s
@@ -151,7 +163,7 @@ module HydraAttribute
           @value_id = new_value.to_i
         elsif new_value.is_a?(::Fixnum)
           @value_id = new_value
-        else
+        else 
           Rails.logger.error("Value for #{self.hydra_attribute.name} must be an ActiveRecord::Base object but is #{new_value}")
         end
       else
@@ -159,14 +171,14 @@ module HydraAttribute
         @value = column.send(type_cast, new_value)
       end
     end
-
+    
     # Sets new type casted attribute value_id
     #
     # @param [Object] new_value
     # @return [NilClass]
     def value_id=(new_value)
       value_will_change! unless value_id == new_value
-
+      
       if new_value.to_i == 0
         @value_id = @value_type = nil
         @attributes[:value_id] = new_value   = nil
@@ -175,7 +187,8 @@ module HydraAttribute
         @value_id = column.type_cast(new_value)
       end
     end
-
+    
+    
     # Sets new type casted attribute value_type
     #
     # @param [Object] new_value
