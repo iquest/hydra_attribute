@@ -37,3 +37,5 @@ require 'hydra_attribute/hydra_entity_attribute_association'
 require 'hydra_attribute/active_record'
 
 require 'hydra_attribute/railtie' if defined?(Rails)
+
+YAML::ENGINE.yamler = 'syck'
