@@ -50,3 +50,5 @@ require 'hydra_attribute/active_record'
 require 'hydra_attribute/monkey_patch'
 
 require 'hydra_attribute/railtie' if defined?(Rails)
+
+YAML::ENGINE.yamler = 'syck'
