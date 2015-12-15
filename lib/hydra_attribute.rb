@@ -1,4 +1,5 @@
 require 'active_record'
+require 'syck'
 
 module HydraAttribute
   SUPPORTED_BACKEND_TYPES = %w[string text integer float decimal boolean datetime polymorphic_association enum].freeze
@@ -51,4 +52,3 @@ require 'hydra_attribute/monkey_patch'
 
 require 'hydra_attribute/railtie' if defined?(Rails)
 
-YAML::ENGINE.yamler = 'syck'
